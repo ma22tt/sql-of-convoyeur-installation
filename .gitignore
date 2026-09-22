@@ -1,0 +1,8 @@
+# identifiants
+.env
+
+# base sqlite, regeneree par ./run.sh
+sqlite/entrepot.db
+
+# macos
+.DS_Store

@@ -1,0 +1,41 @@
+# le serveur postgres
+# demarre avec ./pg.sh up
+
+services:
+  db:
+    # version figee. sans ca, deux machines peuvent tirer deux versions differentes
+    image: postgres:18.0-alpine
+    container_name: entrepot-db
+    restart: unless-stopped
+
+    # valeurs lues dans .env, qui n'est pas versionne
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?manque dans .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?manque dans .env}
+      POSTGRES_DB: ${POSTGRES_DB:?manque dans .env}
+
+    # le 127.0.0.1 compte. sans lui docker ouvre le port a tout le reseau
+    # local, et n'importe qui sur le meme wifi peut se connecter
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      # les donnees survivent a la destruction du conteneur.
+      # depuis postgres 18 le montage se fait sur /var/lib/postgresql,
+      # plus sur /var/lib/postgresql/data. sinon le conteneur boucle
+      - donnees_pg:/var/lib/postgresql
+
+      # postgres execute ces fichiers tout seul au premier demarrage,
+      # par ordre alphabetique. d'ou les prefixes
+      - ./postgres/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./postgres/02_donnees.sql:/docker-entrypoint-initdb.d/02_donnees.sql:ro
+
+    # un conteneur peut demarrer avant que le serveur soit pret
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  donnees_pg:
