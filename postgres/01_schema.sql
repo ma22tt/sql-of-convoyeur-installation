@@ -40,8 +40,12 @@ CREATE TABLE charges (
     )
 );
 
--- une machine porte au plus une charge. le WHERE est obligatoire,
--- sinon deux palettes en transit se bloqueraient entre elles
+-- une machine porte au plus une charge.
+-- postgres traite deux NULL comme differents, donc un UNIQUE simple
+-- passerait aussi. l'index partiel enonce la regle au lieu de s'appuyer
+-- sur cette convention, que postgres 15 rend d'ailleurs reglable avec
+-- NULLS NOT DISTINCT, et il laisse hors de l'index les charges en
+-- transit et retirees
 CREATE UNIQUE INDEX idx_une_charge_par_machine
     ON charges (machine_id)
     WHERE machine_id IS NOT NULL;

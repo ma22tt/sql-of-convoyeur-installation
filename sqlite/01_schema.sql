@@ -41,8 +41,11 @@ CREATE TABLE charges (
 );
 
 -- une machine porte au plus une charge.
--- le WHERE est obligatoire. sans lui, deux palettes en transit auraient
--- toutes les deux machine_id a NULL et la deuxieme serait refusee
+-- un UNIQUE simple marcherait aussi : sqlite considere deux NULL comme
+-- differents, donc plusieurs palettes peuvent etre en transit.
+-- le WHERE partiel dit quand meme quelles lignes sont concernees, et
+-- n'indexe que celles qui peuvent se cogner. il evite de dependre d'une
+-- convention sur les NULL qui change d'un moteur a l'autre
 CREATE UNIQUE INDEX idx_une_charge_par_machine
     ON charges (machine_id)
     WHERE machine_id IS NOT NULL;
